@@ -18,7 +18,7 @@ models:
       - name: session_country
         data_tests: [not_null]
   - name: mart_customer_lifecycle
-    description: One customer with acquisition, signed lifecycle timing, eligibility-aware retention flags, RFM components, and lifetime economics.
+    description: One customer with acquisition, signed lifecycle timing, eligibility-aware retention flags, RFM components, and lifetime economics. The observation cutoff is the latest observed order date because repeat eligibility and recency are order-based.
     columns:
       - name: customer_id
         data_tests: [not_null, unique]
@@ -29,7 +29,7 @@ models:
       - name: is_first_order_on_or_after_signup
         data_tests: [not_null]
   - name: mart_cohort_retention_monthly
-    description: One first-purchase cohort and cohort-age month with explicit eligible and active customer denominators.
+    description: One first-purchase cohort and observable cohort-age month with explicit eligible and active customer denominators; future right-censored periods are excluded upstream.
     columns:
       - name: first_order_cohort_month
         data_tests: [not_null]
@@ -38,7 +38,7 @@ models:
       - name: activity_month
         data_tests: [not_null]
   - name: mart_product_performance_monthly
-    description: One calendar month-product; behavioral metrics use session month, sales use order month, and reviews use review month.
+    description: One calendar month-product; behavioral metrics use session month, while sales and reviews use the linked order month so commercial and review measures describe the same purchase cohort.
     columns:
       - name: calendar_month
         data_tests: [not_null]
@@ -49,10 +49,14 @@ models:
               arguments:
                 to: ref('dim_product')
                 field: product_id
+      - name: viewed_purchase_sessions
+        description: Sessions where this product was both viewed and purchased; use as the numerator for view-to-purchase conversion.
   - name: mart_category_performance_monthly
-    description: One calendar month-category calculated directly from session-category grain to preserve distinct session semantics.
+    description: One calendar month-category calculated directly from session-category grain to preserve distinct session semantics; reviews are attributed to the linked order month.
     columns:
       - name: calendar_month
         data_tests: [not_null]
       - name: category
         data_tests: [not_null]
+      - name: viewed_purchase_sessions
+        description: Sessions where at least one product in this category was both viewed and purchased; use as the numerator for view-to-purchase conversion.

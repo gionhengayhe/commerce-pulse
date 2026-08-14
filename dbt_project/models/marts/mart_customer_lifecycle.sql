@@ -66,8 +66,8 @@ review_rollup as (
 ),
 
 observation as (
-    select max(date_day) as as_of_date
-    from {{ ref('dim_date') }}
+    select max(order_date) as as_of_date
+    from {{ ref('fct_orders') }}
 )
 
 select
