@@ -9,6 +9,7 @@ with funnel as (
         sum(add_to_cart_event_count) as add_to_cart_event_count,
         sum(units_added_to_cart) as units_added_to_cart,
         count(*) filter (where has_purchase) as purchase_sessions,
+        count(*) filter (where has_view and has_purchase) as viewed_purchase_sessions,
         count(distinct customer_id) filter (where has_purchase) as purchasing_customers
     from {{ ref('int_category_session') }}
     group by cast(date_trunc('month', session_date) as date), category
@@ -32,13 +33,13 @@ sales as (
 
 reviews as (
     select
-        cast(date_trunc('month', r.review_date) as date) as calendar_month,
+        cast(date_trunc('month', r.order_date) as date) as calendar_month,
         p.category,
         count(*) as review_count,
         avg(r.rating) as average_rating
     from {{ ref('fct_reviews') }} as r
     inner join {{ ref('dim_product') }} as p using (product_id)
-    group by cast(date_trunc('month', r.review_date) as date), p.category
+    group by cast(date_trunc('month', r.order_date) as date), p.category
 ),
 
 month_categories as (
@@ -59,6 +60,7 @@ select
     coalesce(f.add_to_cart_event_count, 0) as add_to_cart_event_count,
     coalesce(f.units_added_to_cart, 0) as units_added_to_cart,
     coalesce(f.purchase_sessions, 0) as purchase_sessions,
+    coalesce(f.viewed_purchase_sessions, 0) as viewed_purchase_sessions,
     coalesce(f.purchasing_customers, 0) as purchasing_customers,
     coalesce(s.orders, 0) as orders,
     coalesce(s.units_sold, 0) as units_sold,

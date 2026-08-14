@@ -21,7 +21,7 @@ models:
       - name: category
         data_tests: [not_null]
   - name: int_customer_cohort_months
-    description: One purchasing customer per cohort age month, including explicitly flagged right-censored future periods.
+    description: One purchasing customer per observable cohort age month, ending at the latest observed order month. Future right-censored periods are not materialized.
     columns:
       - name: customer_id
         data_tests: [not_null]
@@ -29,3 +29,11 @@ models:
         data_tests: [not_null]
       - name: activity_month
         data_tests: [not_null]
+      - name: is_eligible
+        description: Always true because future right-censored periods are excluded before materialization; retained as an explicit downstream metric contract.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true]
+                quote: false

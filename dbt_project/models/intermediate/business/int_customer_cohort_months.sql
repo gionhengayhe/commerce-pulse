@@ -39,6 +39,11 @@ customer_months as (
     from customer_cohorts as c
     cross join month_offsets as m
     cross join observation as o
+    where cast(
+        c.first_order_cohort_month
+        + (m.months_since_first_order * interval '1 month')
+        as date
+    ) <= o.observation_month
 ),
 
 monthly_orders as (
@@ -58,9 +63,8 @@ select
     c.first_order_cohort_month,
     c.months_since_first_order,
     c.activity_month,
-    c.activity_month <= c.observation_month as is_eligible,
-    c.activity_month <= c.observation_month
-        and coalesce(o.order_count, 0) > 0 as is_active,
+    true as is_eligible,
+    coalesce(o.order_count, 0) > 0 as is_active,
     coalesce(o.order_count, 0) as order_count,
     coalesce(o.net_sales_usd, 0) as net_sales_usd,
     coalesce(o.estimated_gross_profit_usd, 0) as estimated_gross_profit_usd
