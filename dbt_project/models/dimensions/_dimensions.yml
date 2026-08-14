@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: Analytical customer dimension with direct identifiers excluded.
+    columns:
+      - name: customer_id
+        data_tests: [not_null, unique]
+      - name: age_band
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['18-24', '25-34', '35-44', '45-54', '55-64', '65+', 'Unknown']
+  - name: dim_product
+    description: Product dimension based on the current catalog snapshot; price and cost are not historical.
+    columns:
+      - name: product_id
+        data_tests: [not_null, unique]
+      - name: category
+        data_tests: [not_null]
+  - name: dim_date
+    description: Complete calendar spine covering every date observed across source entities and events.
+    columns:
+      - name: date_day
+        data_tests: [not_null, unique]
+      - name: day_of_week_number
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5, 6, 7]

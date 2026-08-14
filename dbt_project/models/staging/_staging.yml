@@ -1,0 +1,113 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: One row per customer.
+    columns:
+      - name: customer_id
+        data_tests: [not_null, unique]
+      - name: email
+        data_tests: [not_null, unique]
+      - name: customer_country
+        data_tests: [not_null]
+  - name: stg_products
+    description: One row per product; costs are current catalog snapshots.
+    columns:
+      - name: product_id
+        data_tests: [not_null, unique]
+  - name: stg_sessions
+    description: One row per browsing session.
+    columns:
+      - name: session_id
+        data_tests: [not_null, unique]
+      - name: customer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+  - name: stg_events
+    description: One row per clickstream event.
+    columns:
+      - name: event_id
+        data_tests: [not_null, unique]
+      - name: session_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_sessions')
+                field: session_id
+      - name: product_id
+        description: Product involved in page-view and add-to-cart events; structurally null for checkout and purchase events.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: product_id
+      - name: event_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [page_view, add_to_cart, checkout, purchase]
+  - name: stg_orders
+    description: One row per observed purchase transaction/order.
+    columns:
+      - name: order_id
+        data_tests: [not_null, unique]
+      - name: customer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+  - name: stg_order_items
+    description: One row per raw order line; exact duplicate-looking lines are intentionally retained.
+    columns:
+      - name: source_row_number
+        description: Stable row ordinal captured from the source CSV during ingestion.
+        data_tests: [not_null, unique]
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: product_id
+  - name: stg_reviews
+    description: One row per submitted product review.
+    columns:
+      - name: review_id
+        data_tests: [not_null, unique]
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: product_id
+      - name: rating
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+      - name: reviewed_at
+        data_tests: [not_null]

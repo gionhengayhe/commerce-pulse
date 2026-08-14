@@ -1,0 +1,59 @@
+version: 2
+
+models:
+  - name: int_purchase_events_matched_to_orders
+    description: Reconstructs the one-to-one relationship between purchase events and observed orders.
+    columns:
+      - name: event_id
+        data_tests: [not_null, unique]
+      - name: order_id
+        data_tests: [not_null, unique]
+      - name: session_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_sessions')
+                field: session_id
+  - name: int_order_lines_enriched
+    description: One retained source order line with allocated discount and estimated unit economics.
+    columns:
+      - name: order_line_key
+        data_tests: [not_null, unique]
+      - name: source_row_number
+        data_tests: [not_null, unique]
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+      - name: product_id
+        data_tests: [not_null]
+  - name: int_order_financials
+    description: One order with line-level rollups and reconciliation against source totals.
+    columns:
+      - name: order_id
+        data_tests: [not_null, unique]
+      - name: is_financially_reconciled
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true]
+                quote: false
+  - name: int_customer_order_sequence
+    description: One order with deterministic sequence and repeat-purchase timing within its customer history.
+    columns:
+      - name: order_id
+        data_tests: [not_null, unique]
+      - name: customer_id
+        data_tests: [not_null]
+  - name: int_session_funnel
+    description: One browsing session with funnel flags, event counts, timing, and matched order count.
+    columns:
+      - name: session_id
+        data_tests: [not_null, unique]
+      - name: customer_id
+        data_tests: [not_null]
