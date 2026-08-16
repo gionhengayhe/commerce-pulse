@@ -51,6 +51,8 @@ models:
                 field: product_id
       - name: viewed_purchase_sessions
         description: Sessions where this product was both viewed and purchased; use as the numerator for view-to-purchase conversion.
+      - name: carted_purchase_sessions
+        description: Sessions where this product was both added to cart and purchased; use as the numerator for cart-to-purchase conversion.
   - name: mart_category_performance_monthly
     description: One calendar month-category calculated directly from session-category grain to preserve distinct session semantics; reviews are attributed to the linked order month.
     columns:
@@ -60,3 +62,5 @@ models:
         data_tests: [not_null]
       - name: viewed_purchase_sessions
         description: Sessions where at least one product in this category was both viewed and purchased; use as the numerator for view-to-purchase conversion.
+      - name: carted_purchase_sessions
+        description: Sessions where at least one product in this category was both added to cart and purchased; use as the numerator for cart-to-purchase conversion.

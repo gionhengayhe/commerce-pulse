@@ -10,6 +10,7 @@ with funnel as (
         sum(units_added_to_cart) as units_added_to_cart,
         count(*) filter (where has_purchase) as purchase_sessions,
         count(*) filter (where has_view and has_purchase) as viewed_purchase_sessions,
+        count(*) filter (where has_add_to_cart and has_purchase) as carted_purchase_sessions,
         count(distinct customer_id) filter (where has_purchase) as purchasing_customers
     from {{ ref('int_category_session') }}
     group by cast(date_trunc('month', session_date) as date), category
@@ -61,6 +62,7 @@ select
     coalesce(f.units_added_to_cart, 0) as units_added_to_cart,
     coalesce(f.purchase_sessions, 0) as purchase_sessions,
     coalesce(f.viewed_purchase_sessions, 0) as viewed_purchase_sessions,
+    coalesce(f.carted_purchase_sessions, 0) as carted_purchase_sessions,
     coalesce(f.purchasing_customers, 0) as purchasing_customers,
     coalesce(s.orders, 0) as orders,
     coalesce(s.units_sold, 0) as units_sold,

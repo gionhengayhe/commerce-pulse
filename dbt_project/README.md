@@ -44,6 +44,7 @@ query time from their components, for example:
 ```text
 conversion_rate = purchase_sessions / sessions
 view_to_purchase_rate = viewed_purchase_sessions / view_sessions
+cart_to_purchase_rate = carted_purchase_sessions / cart_sessions
 average_order_value = net_sales_usd / orders
 gross_margin_pct = estimated_gross_profit_usd / net_sales_usd
 retention_rate = active_customers / eligible_customers
@@ -51,6 +52,9 @@ retention_rate = active_customers / eligible_customers
 
 Product and category monthly marts are separate because distinct category
 sessions cannot be recovered by summing distinct product sessions.
+
+The complete semantic contract, including additivity and known limitations, is
+maintained in `docs/metric_definitions.md`.
 
 In product and category marts, `purchase_sessions` includes all attributed
 purchases, including purchases without a recorded product view.
