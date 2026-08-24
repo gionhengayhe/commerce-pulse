@@ -2,10 +2,12 @@ version: 2
 
 models:
   - name: mart_executive_daily
-    description: One calendar day with additive traffic, funnel, customer, order, revenue, and profitability measures.
+    description: One calendar day with additive traffic, funnel, order, revenue, and profitability measures, plus an explicitly non-additive purchasing-customer YTD snapshot.
     columns:
       - name: date_day
         data_tests: [not_null, unique]
+      - name: purchasing_customers_ytd
+        description: Distinct customers with at least one order from the start of the row's calendar year through date_day; use MAX, not SUM, for a period KPI.
   - name: mart_channel_funnel_daily
     description: One session day-source-device-country combination; orders and revenue are attributed to the matched acquisition session.
     columns:
@@ -16,6 +18,64 @@ models:
       - name: session_device
         data_tests: [not_null]
       - name: session_country
+        data_tests: [not_null]
+  - name: mart_purchase_journey_daily
+    description: Two Tableau scaffold slices for each purchase-journey stage at day-source-device-country grain. Achieved and Remaining slices sum to the session base for every stage.
+    columns:
+      - name: journey_date_day
+        data_tests: [not_null]
+      - name: journey_session_source
+        data_tests: [not_null]
+      - name: journey_session_device
+        data_tests: [not_null]
+      - name: journey_session_country
+        data_tests: [not_null]
+      - name: stage
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['1. Sessions', '2. Product Views', '3. Added to Cart', '4. Checkout', '5. Purchase']
+      - name: stage_order
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+      - name: slice
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [Achieved, Remaining]
+      - name: slice_order
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2]
+      - name: slice_value
+        data_tests: [not_null]
+      - name: stage_sessions_display
+        data_tests: [not_null]
+      - name: base_sessions_display
+        data_tests: [not_null]
+      - name: stage_size_value
+        data_tests: [not_null]
+  - name: mart_unique_visitor_sessions
+    description: One session with its identified customer and traffic dimensions, used for exact period-level distinct visitor metrics in Tableau.
+    columns:
+      - name: visitor_session_id
+        data_tests: [not_null, unique]
+      - name: visitor_customer_id
+        data_tests: [not_null]
+      - name: visitor_date_day
+        data_tests: [not_null]
+      - name: visitor_session_source
+        data_tests: [not_null]
+      - name: visitor_session_device
+        data_tests: [not_null]
+      - name: visitor_session_country
         data_tests: [not_null]
   - name: mart_customer_lifecycle
     description: One customer with acquisition, signed lifecycle timing, eligibility-aware retention flags, RFM components, and lifetime economics. The observation cutoff is the latest observed order date because repeat eligibility and recency are order-based.
