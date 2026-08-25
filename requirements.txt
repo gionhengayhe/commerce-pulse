@@ -1,6 +1,5 @@
 kagglehub
 polars
-pathlib
 dbt-core
 dbt-duckdb
 duckdb

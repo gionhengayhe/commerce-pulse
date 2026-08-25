@@ -11,6 +11,9 @@ import duckdb
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXPORT_SCRIPT = REPO_ROOT / "dbt_project" / "scripts" / "export_tableau.py"
 DAG_FILE = REPO_ROOT / "airflow" / "dags" / "commerce_pulse_daily.py"
+COMPOSE_FILE = REPO_ROOT / "docker-compose.yml"
+DOCKERFILE = REPO_ROOT / "docker" / "Dockerfile"
+DOCKER_REQUIREMENTS = REPO_ROOT / "docker" / "requirements.txt"
 
 
 def load_module(name: str, path: Path):
@@ -68,6 +71,34 @@ class DagContractTests(unittest.TestCase):
         self.assertIn('schedule="0 2 * * *"', source)
         self.assertIn("max_active_runs=1", source)
         self.assertIn("ingest_raw() >> dbt_build() >> validate_analytics() >> export_tableau()", source)
+
+
+class DockerContractTests(unittest.TestCase):
+    def test_compose_contains_the_local_executor_runtime(self):
+        source = COMPOSE_FILE.read_text(encoding="utf-8")
+        for service in (
+            "postgres:",
+            "airflow-init:",
+            "airflow-apiserver:",
+            "airflow-scheduler:",
+            "airflow-dag-processor:",
+        ):
+            self.assertIn(service, source)
+
+        self.assertIn("AIRFLOW__CORE__EXECUTOR: LocalExecutor", source)
+        self.assertIn("COMMERCE_PULSE_REPO_ROOT: /opt/commerce-pulse", source)
+        self.assertIn("/entrypoint airflow version", source)
+        self.assertNotIn("CeleryExecutor", source)
+
+    def test_custom_image_pins_the_analytics_runtime(self):
+        dockerfile = DOCKERFILE.read_text(encoding="utf-8")
+        requirements = DOCKER_REQUIREMENTS.read_text(encoding="utf-8").splitlines()
+
+        self.assertIn("FROM apache/airflow:${AIRFLOW_VERSION}", dockerfile)
+        self.assertEqual(
+            requirements,
+            ["dbt-core==1.12.0", "dbt-duckdb==1.11.0", "duckdb==1.5.5"],
+        )
 
 
 if __name__ == "__main__":

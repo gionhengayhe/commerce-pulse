@@ -3,4 +3,5 @@
 /*.duckdb
 /export
 /.airflow/
+/.env
 __pycache__/
