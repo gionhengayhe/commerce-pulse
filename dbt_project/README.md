@@ -7,7 +7,7 @@ From the repository root:
 ```powershell
 python dbt_project/scripts/load_raw.py
 Set-Location dbt_project
-dbt build
+dbt build --profiles-dir .
 ```
 
 The loader replaces only the seven tables in the DuckDB `raw` schema from the
@@ -29,8 +29,8 @@ raw -> staging -> intermediate/prep -> dimensions + facts
 - `dimensions` and `facts`: canonical analytical entities and events.
 - `intermediate/business`: reusable product-session, category-session, and
   customer-cohort grains.
-- `marts`: six business-facing tables for executive, acquisition, lifecycle,
-  cohort, product, and category analysis.
+- `marts`: six governed reporting outputs plus two optional product/cohort
+  analysis tables.
 
 `order_items` deliberately retains duplicate-looking source rows. The ingestion
 step records `_source_row_number`, which staging exposes as `source_row_number`
@@ -55,6 +55,13 @@ sessions cannot be recovered by summing distinct product sessions.
 
 The complete semantic contract, including additivity and known limitations, is
 maintained in `docs/metric_definitions.md`.
+
+After a successful build, refresh the Tableau extracts atomically from the
+repository root:
+
+```powershell
+python dbt_project/scripts/export_tableau.py
+```
 
 In product and category marts, `purchase_sessions` includes all attributed
 purchases, including purchases without a recorded product view.

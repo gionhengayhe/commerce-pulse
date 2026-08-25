@@ -4,3 +4,5 @@ dbt_packages/
 logs/
 .env
 *.duckdb
+.user.yml
+__pycache__/
