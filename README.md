@@ -34,3 +34,22 @@ python dbt_project/scripts/export_tableau.py
 
 For scheduling, environment variables, WSL2 setup, and DAG validation, see the
 [Airflow orchestration guide](airflow/README.md).
+
+## Run the complete platform with Docker
+
+The Docker runtime uses PostgreSQL for Airflow metadata and keeps DuckDB as the
+embedded analytics warehouse. From the repository root:
+
+```powershell
+Copy-Item .env.example .env
+docker compose build
+docker compose up airflow-init
+docker compose up -d
+```
+
+Open Airflow at <http://localhost:8080>, then enable or manually trigger
+`commerce_pulse_daily`. The default local credentials are `airflow` / `airflow`;
+change them in `.env` for any shared environment.
+
+The repository is mounted at `/opt/commerce-pulse`, so a successful DAG run
+updates `dbt_project/dev.duckdb` and the CSV files in `export` on the host.

@@ -42,8 +42,88 @@ same paths without changing code.
 
 ## Local Airflow setup
 
-Apache Airflow should run on Windows through WSL2 or Linux containers. From a
-WSL2 checkout, install Airflow with its official constraints file:
+The supported project runtime is Docker Compose. It uses:
+
+```text
+PostgreSQL          -> Airflow metadata only
+Airflow API server  -> UI and task execution API
+Airflow scheduler   -> LocalExecutor task execution
+Airflow DAG processor
+DuckDB file         -> analytics warehouse on the mounted host repository
+```
+
+LocalExecutor is intentional: the pipeline stages are sequential, and a
+Redis/Celery worker tier would add infrastructure without adding useful
+parallelism. The official Airflow Docker Compose guide is a local-development
+quick start rather than a production deployment; this project has the same
+scope.
+
+### Start on Windows, macOS, or Linux
+
+Install Docker Desktop or Docker Engine with Docker Compose 2.14 or newer and
+allocate at least 4 GB of memory to Docker. From the repository root:
+
+```powershell
+Copy-Item .env.example .env
+docker compose build
+docker compose up airflow-init
+docker compose up -d
+docker compose ps
+```
+
+On Linux or WSL2, set `AIRFLOW_UID` in `.env` to the result of `id -u` so files
+created in bind-mounted directories retain the host user's ownership.
+
+Airflow is available at <http://localhost:8080>. The local defaults are:
+
+```text
+username: airflow
+password: airflow
+```
+
+Change the admin password, PostgreSQL password, JWT secret, and Fernet key in
+`.env` before sharing the environment or storing connections. `.env` is ignored
+by Git.
+
+### Validate the container runtime
+
+After the services are healthy:
+
+```powershell
+docker compose exec airflow-scheduler airflow dags list
+docker compose exec airflow-scheduler airflow dags list-import-errors
+docker compose exec airflow-scheduler airflow tasks list commerce_pulse_daily --tree
+docker compose exec airflow-scheduler airflow dags test commerce_pulse_daily 2026-08-26
+```
+
+The DAG starts paused. Enable it in the UI for the daily schedule, or trigger it
+manually:
+
+```powershell
+docker compose exec airflow-scheduler airflow dags unpause commerce_pulse_daily
+docker compose exec airflow-scheduler airflow dags trigger commerce_pulse_daily
+```
+
+Watch task logs in the UI or with:
+
+```powershell
+docker compose logs -f airflow-scheduler airflow-dag-processor
+```
+
+Stop services without deleting Airflow metadata:
+
+```powershell
+docker compose down
+```
+
+`docker compose down --volumes` also deletes the PostgreSQL metadata and Airflow
+log volumes. It does not delete the bind-mounted raw data, DuckDB warehouse, or
+exports in this repository.
+
+### Optional native WSL2 setup
+
+Docker is the reproducible project path. For native debugging from a WSL2
+checkout, Airflow can still be installed with its official constraints file:
 
 ```bash
 python -m venv .venv-airflow
@@ -73,9 +153,6 @@ airflow tasks list commerce_pulse_daily --tree
 airflow dags test commerce_pulse_daily 2026-08-25
 ```
 
-The next infrastructure phase will package this runtime in Docker Compose so
-Airflow does not depend on a native Windows installation.
-
 ## Idempotency
 
 - Raw ingestion uses one transaction and `create or replace table`.
@@ -84,3 +161,5 @@ Airflow does not depend on a native Windows installation.
   extracts.
 - `max_active_runs=1` prevents two DAG runs from writing the shared DuckDB file
   simultaneously.
+- The Compose runtime uses LocalExecutor and the DAG stages form one sequential
+  dependency chain, so only one process writes the DuckDB file during a run.
