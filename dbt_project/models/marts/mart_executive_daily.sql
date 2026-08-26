@@ -27,6 +27,36 @@ order_daily as (
     group by order_date
 ),
 
+customer_first_purchase_by_year as (
+    select
+        customer_id,
+        min(order_date) as first_purchase_date_in_year
+    from {{ ref('fct_orders') }}
+    group by
+        customer_id,
+        year(order_date)
+),
+
+customer_first_purchase_daily as (
+    select
+        first_purchase_date_in_year as date_day,
+        count(*) as first_purchase_customers
+    from customer_first_purchase_by_year
+    group by first_purchase_date_in_year
+),
+
+customer_ytd as (
+    select
+        d.date_day,
+        sum(coalesce(c.first_purchase_customers, 0)) over (
+            partition by year(d.date_day)
+            order by d.date_day
+            rows between unbounded preceding and current row
+        ) as purchasing_customers_ytd
+    from {{ ref('dim_date') }} as d
+    left join customer_first_purchase_daily as c using (date_day)
+),
+
 line_daily as (
     select
         order_date as date_day,
@@ -52,8 +82,10 @@ select
     coalesce(o.discount_amount_usd, 0) as discount_amount_usd,
     coalesce(o.net_sales_usd, 0) as net_sales_usd,
     coalesce(o.estimated_cogs_usd, 0) as estimated_cogs_usd,
-    coalesce(o.estimated_gross_profit_usd, 0) as estimated_gross_profit_usd
+    coalesce(o.estimated_gross_profit_usd, 0) as estimated_gross_profit_usd,
+    coalesce(c.purchasing_customers_ytd, 0) as purchasing_customers_ytd
 from {{ ref('dim_date') }} as d
 left join session_daily as s using (date_day)
 left join order_daily as o using (date_day)
 left join line_daily as l using (date_day)
+left join customer_ytd as c using (date_day)
