@@ -1,0 +1,7 @@
+dbt_project:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('COMMERCE_PULSE_DB_PATH', 'dev.duckdb') }}"
+      threads: 1

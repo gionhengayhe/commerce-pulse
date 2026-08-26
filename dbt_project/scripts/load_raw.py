@@ -1,5 +1,7 @@
-"""Load immutable source CSVs into the local DuckDB raw schema."""
+"""Load immutable source CSVs into the DuckDB raw schema."""
 
+import argparse
+import os
 from pathlib import Path
 
 import duckdb
@@ -7,8 +9,8 @@ import duckdb
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
 REPO_DIR = PROJECT_DIR.parent
-DATABASE_PATH = PROJECT_DIR / "dev.duckdb"
-RAW_DIR = REPO_DIR / "data" / "raw"
+DEFAULT_DATABASE_PATH = PROJECT_DIR / "dev.duckdb"
+DEFAULT_RAW_DIR = REPO_DIR / "data" / "raw"
 TABLES = (
     "customers",
     "products",
@@ -20,27 +22,57 @@ TABLES = (
 )
 
 
-def main() -> None:
-    missing = [str(RAW_DIR / f"{table}.csv") for table in TABLES if not (RAW_DIR / f"{table}.csv").is_file()]
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--database-path",
+        type=Path,
+        default=Path(os.getenv("COMMERCE_PULSE_DB_PATH", DEFAULT_DATABASE_PATH)),
+        help="DuckDB warehouse path (default: COMMERCE_PULSE_DB_PATH or dbt_project/dev.duckdb)",
+    )
+    parser.add_argument(
+        "--raw-dir",
+        type=Path,
+        default=Path(os.getenv("COMMERCE_PULSE_RAW_DIR", DEFAULT_RAW_DIR)),
+        help="Directory containing the seven raw CSV files",
+    )
+    return parser.parse_args()
+
+
+def load_raw(database_path: Path, raw_dir: Path) -> None:
+    database_path = database_path.resolve()
+    raw_dir = raw_dir.resolve()
+    missing = [str(raw_dir / f"{table}.csv") for table in TABLES if not (raw_dir / f"{table}.csv").is_file()]
     if missing:
         raise FileNotFoundError(f"Missing raw CSV files: {', '.join(missing)}")
 
-    with duckdb.connect(str(DATABASE_PATH)) as connection:
-        connection.execute("create schema if not exists raw")
-        for table in TABLES:
-            csv_path = (RAW_DIR / f"{table}.csv").as_posix().replace("'", "''")
-            select_clause = "*"
-            if table == "order_items":
-                # The source has no line identifier and duplicate-looking rows are
-                # valid. Capture CSV row order at ingestion so every line retains
-                # a stable identity without deduplicating business data.
-                select_clause = "row_number() over () as _source_row_number, *"
-            connection.execute(
-                f"create or replace table raw.{table} as "
-                f"select {select_clause} from read_csv_auto('{csv_path}', header = true)"
-            )
-            row_count = connection.execute(f"select count(*) from raw.{table}").fetchone()[0]
-            print(f"raw.{table}: {row_count:,} rows")
+    database_path.parent.mkdir(parents=True, exist_ok=True)
+    with duckdb.connect(str(database_path)) as connection:
+        connection.execute("begin transaction")
+        try:
+            connection.execute("create schema if not exists raw")
+            for table in TABLES:
+                csv_path = (raw_dir / f"{table}.csv").as_posix().replace("'", "''")
+                select_clause = "*"
+                if table == "order_items":
+                    # The source has no line identifier and duplicate-looking rows
+                    # are valid. Preserve CSV row order as a stable line identity.
+                    select_clause = "row_number() over () as _source_row_number, *"
+                connection.execute(
+                    f"create or replace table raw.{table} as "
+                    f"select {select_clause} from read_csv_auto('{csv_path}', header = true)"
+                )
+                row_count = connection.execute(f"select count(*) from raw.{table}").fetchone()[0]
+                print(f"raw.{table}: {row_count:,} rows")
+            connection.execute("commit")
+        except Exception:
+            connection.execute("rollback")
+            raise
+
+
+def main() -> None:
+    args = parse_args()
+    load_raw(args.database_path, args.raw_dir)
 
 
 if __name__ == "__main__":
