@@ -1,14 +1,10 @@
 .git
 .github
-.airflow-export-validation
 .env
 data
-export
 logs
 tableau
 test_data.ipynb
 **/__pycache__
 **/*.pyc
 dbt_project/*.duckdb
-dbt_project/logs
-dbt_project/target

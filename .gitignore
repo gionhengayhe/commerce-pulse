@@ -1,7 +1,5 @@
 /data
 /logs/
-/*.duckdb
-/export
-/.airflow/
 /.env
 __pycache__/
+tableau/~*.twbr

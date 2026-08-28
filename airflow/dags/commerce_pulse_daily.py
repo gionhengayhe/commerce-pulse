@@ -25,7 +25,7 @@ def run_command(command: list[str], cwd: Path) -> None:
     path_defaults = {
         "COMMERCE_PULSE_DB_PATH": DBT_PROJECT_DIR / "dev.duckdb",
         "COMMERCE_PULSE_RAW_DIR": REPO_ROOT / "data" / "raw",
-        "COMMERCE_PULSE_EXPORT_DIR": REPO_ROOT / "export",
+        "COMMERCE_PULSE_EXPORT_DIR": REPO_ROOT / "data" / "export",
     }
     for name, default in path_defaults.items():
         configured = Path(environment.get(name, default))
@@ -37,7 +37,7 @@ def run_command(command: list[str], cwd: Path) -> None:
 
 @dag(
     dag_id="commerce_pulse_daily",
-    description="Refresh raw data, build dbt, validate analytics, and export Tableau datasets.",
+    description="Fetch source data, load DuckDB, build dbt, validate analytics, and export Tableau datasets.",
     schedule="0 2 * * *",
     start_date=pendulum.datetime(2025, 1, 1, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
@@ -52,9 +52,16 @@ def run_command(command: list[str], cwd: Path) -> None:
 )
 def commerce_pulse_daily():
     @task()
+    def fetch_raw() -> None:
+        run_command(
+            [PYTHON_EXECUTABLE, str(REPO_ROOT / "airflow" / "scripts" / "fetch_raw.py")],
+            REPO_ROOT,
+        )
+
+    @task()
     def ingest_raw() -> None:
         run_command(
-            [PYTHON_EXECUTABLE, str(DBT_PROJECT_DIR / "scripts" / "load_raw.py")],
+            [PYTHON_EXECUTABLE, str(REPO_ROOT / "airflow" / "scripts" / "load_raw.py")],
             REPO_ROOT,
         )
 
@@ -97,11 +104,11 @@ def commerce_pulse_daily():
     @task()
     def export_tableau() -> None:
         run_command(
-            [PYTHON_EXECUTABLE, str(DBT_PROJECT_DIR / "scripts" / "export_tableau.py")],
+            [PYTHON_EXECUTABLE, str(REPO_ROOT / "airflow" / "scripts" / "export_tableau.py")],
             REPO_ROOT,
         )
 
-    ingest_raw() >> dbt_build() >> validate_analytics() >> export_tableau()
+    fetch_raw() >> ingest_raw() >> dbt_build() >> validate_analytics() >> export_tableau()
 
 
 commerce_pulse_daily()
