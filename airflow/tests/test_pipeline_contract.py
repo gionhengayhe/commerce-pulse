@@ -15,7 +15,7 @@ EXPORT_SCRIPT = REPO_ROOT / "airflow" / "scripts" / "export_tableau.py"
 DAG_FILE = REPO_ROOT / "airflow" / "dags" / "commerce_pulse_daily.py"
 COMPOSE_FILE = REPO_ROOT / "docker-compose.yml"
 DOCKERFILE = REPO_ROOT / "docker" / "Dockerfile"
-DOCKER_REQUIREMENTS = REPO_ROOT / "docker" / "requirements.txt"
+DOCKER_REQUIREMENTS = REPO_ROOT / "requirements.txt"
 
 
 def load_module(name: str, path: Path):
@@ -27,6 +27,13 @@ def load_module(name: str, path: Path):
 
 
 class ExportTableauTests(unittest.TestCase):
+    def test_default_database_lives_under_data(self):
+        loader = load_module("load_raw_defaults", LOAD_SCRIPT)
+        exporter = load_module("export_tableau_database_defaults", EXPORT_SCRIPT)
+        expected = REPO_ROOT / "data" / "warehouse.duckdb"
+        self.assertEqual(loader.DEFAULT_DATABASE_PATH, expected)
+        self.assertEqual(exporter.DEFAULT_DATABASE_PATH, expected)
+
     def test_default_output_lives_under_data(self):
         exporter = load_module("export_tableau_defaults", EXPORT_SCRIPT)
         self.assertEqual(exporter.DEFAULT_OUTPUT_DIR, REPO_ROOT / "data" / "export")
@@ -93,7 +100,7 @@ class FetchRawTests(unittest.TestCase):
 
 
 class DagContractTests(unittest.TestCase):
-    def test_dag_contains_the_five_stage_contract(self):
+    def test_dag_contains_the_four_stage_contract(self):
         tree = ast.parse(DAG_FILE.read_text(encoding="utf-8"))
         functions = {node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)}
         self.assertTrue(
@@ -102,7 +109,6 @@ class DagContractTests(unittest.TestCase):
                 "fetch_raw",
                 "ingest_raw",
                 "dbt_build",
-                "validate_analytics",
                 "export_tableau",
             }
             <= functions
@@ -115,9 +121,8 @@ class DagContractTests(unittest.TestCase):
         self.assertIn('REPO_ROOT / "airflow" / "scripts" / "fetch_raw.py"', source)
         self.assertIn('REPO_ROOT / "airflow" / "scripts" / "load_raw.py"', source)
         self.assertIn('REPO_ROOT / "airflow" / "scripts" / "export_tableau.py"', source)
-        self.assertIn('REPO_ROOT / "data" / "export"', source)
         self.assertIn(
-            "fetch_raw() >> ingest_raw() >> dbt_build() >> validate_analytics() >> export_tableau()",
+            "fetch_raw() >> ingest_raw() >> dbt_build() >> export_tableau()",
             source,
         )
 
@@ -143,10 +148,11 @@ class DockerContractTests(unittest.TestCase):
             self.assertIn(service, source)
 
         self.assertIn("AIRFLOW__CORE__EXECUTOR: LocalExecutor", source)
-        self.assertIn("COMMERCE_PULSE_REPO_ROOT: /opt/commerce-pulse", source)
         self.assertIn("COMMERCE_PULSE_KAGGLE_DATASET:", source)
         self.assertIn("/entrypoint airflow version", source)
         self.assertNotIn("CeleryExecutor", source)
+        self.assertNotIn("airflow-cli:", source)
+        self.assertNotIn("KAGGLEHUB_CACHE", source)
 
     def test_custom_image_pins_the_analytics_runtime(self):
         dockerfile = DOCKERFILE.read_text(encoding="utf-8")
@@ -157,6 +163,7 @@ class DockerContractTests(unittest.TestCase):
             requirements,
             [
                 "kagglehub==1.0.2",
+                "polars==1.43.2",
                 "dbt-core==1.12.0",
                 "dbt-duckdb==1.11.0",
                 "duckdb==1.5.5",
