@@ -1,5 +1,10 @@
-/data
-/logs/
-/.env
+.env
+data/
+*.duckdb
 __pycache__/
+*.py[cod]
+dbt_project/dbt_packages/
+dbt_project/logs/
+dbt_project/target/
+dbt_project/.user.yml
 tableau/~*.twbr
