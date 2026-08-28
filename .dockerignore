@@ -7,4 +7,7 @@ tableau
 test_data.ipynb
 **/__pycache__
 **/*.pyc
-dbt_project/*.duckdb
+**/*.duckdb
+dbt_project/dbt_packages
+dbt_project/logs
+dbt_project/target
