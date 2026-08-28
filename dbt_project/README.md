@@ -5,7 +5,7 @@
 From the repository root:
 
 ```powershell
-python dbt_project/scripts/load_raw.py
+python airflow/scripts/load_raw.py
 Set-Location dbt_project
 dbt build --profiles-dir .
 ```
@@ -60,7 +60,7 @@ After a successful build, refresh the Tableau extracts atomically from the
 repository root:
 
 ```powershell
-python dbt_project/scripts/export_tableau.py
+python airflow/scripts/export_tableau.py
 ```
 
 In product and category marts, `purchase_sessions` includes all attributed

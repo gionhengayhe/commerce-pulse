@@ -7,9 +7,9 @@ from pathlib import Path
 import duckdb
 
 
-PROJECT_DIR = Path(__file__).resolve().parents[1]
-REPO_DIR = PROJECT_DIR.parent
-DEFAULT_DATABASE_PATH = PROJECT_DIR / "dev.duckdb"
+REPO_DIR = Path(__file__).resolve().parents[2]
+DBT_PROJECT_DIR = REPO_DIR / "dbt_project"
+DEFAULT_DATABASE_PATH = DBT_PROJECT_DIR / "dev.duckdb"
 DEFAULT_RAW_DIR = REPO_DIR / "data" / "raw"
 TABLES = (
     "customers",

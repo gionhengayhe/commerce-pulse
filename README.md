@@ -4,7 +4,8 @@ Commerce Pulse is a reproducible e-commerce analytics pipeline built with
 Python, DuckDB, dbt, Apache Airflow, and Tableau.
 
 ```text
-Raw CSVs
+Kaggle source
+   -> validated CSV snapshot in data/raw
    -> transactional DuckDB ingestion
    -> dbt staging, intermediate, dimensions, facts, and marts
    -> semantic and reconciliation acceptance gates
@@ -17,19 +18,20 @@ Raw CSVs
   model inventory, and metric contracts.
 - [`airflow`](airflow/README.md): daily Airflow DAG and its runtime
   contract.
-- `data/raw`: seven immutable source CSV extracts.
-- `export`: generated Tableau-ready datasets.
+- `data/raw`: seven validated source CSVs synchronized from Kaggle Hub.
+- `data/export`: generated Tableau-ready datasets.
 - `tableau`: dashboard workbook maintained locally.
 
 ## Run the pipeline stages manually
 
 ```powershell
-python dbt_project/scripts/load_raw.py
+python airflow/scripts/fetch_raw.py
+python airflow/scripts/load_raw.py
 Push-Location dbt_project
 dbt build --profiles-dir .
 dbt test --profiles-dir . --select test_type:singular
 Pop-Location
-python dbt_project/scripts/export_tableau.py
+python airflow/scripts/export_tableau.py
 ```
 
 For scheduling, environment variables, WSL2 setup, and DAG validation, see the
@@ -52,4 +54,4 @@ Open Airflow at <http://localhost:8080>, then enable or manually trigger
 change them in `.env` for any shared environment.
 
 The repository is mounted at `/opt/commerce-pulse`, so a successful DAG run
-updates `dbt_project/dev.duckdb` and the CSV files in `export` on the host.
+updates `dbt_project/dev.duckdb` and the CSV files in `data/export` on the host.
