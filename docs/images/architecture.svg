@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="760" viewBox="0 0 1600 760" role="img" aria-labelledby="title description">
+  <title id="title">Commerce Pulse analytics architecture</title>
+  <desc id="description">A local batch pipeline moves a public Kaggle dataset through Python ingestion, DuckDB, dbt models and tests, Tableau exports, and a Tableau dashboard. Airflow orchestrates the pipeline and Docker provides the runtime.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7fbff"/>
+      <stop offset="1" stop-color="#eaf3fb"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#17324d" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4779a8"/>
+    </marker>
+    <style>
+      .title { font: 700 32px Inter, Segoe UI, Arial, sans-serif; fill: #17324d; }
+      .subtitle { font: 400 17px Inter, Segoe UI, Arial, sans-serif; fill: #5d6b78; }
+      .box-title { font: 700 21px Inter, Segoe UI, Arial, sans-serif; fill: #17324d; }
+      .box-copy { font: 400 15px Inter, Segoe UI, Arial, sans-serif; fill: #5d6b78; }
+      .label { font: 700 16px Inter, Segoe UI, Arial, sans-serif; fill: #24559a; letter-spacing: 0.8px; }
+      .small { font: 400 14px Inter, Segoe UI, Arial, sans-serif; fill: #5d6b78; }
+      .flow { stroke: #4779a8; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1600" height="760" rx="30" fill="url(#background)"/>
+  <text x="70" y="67" class="title">Commerce Pulse analytics architecture</text>
+  <text x="70" y="98" class="subtitle">One local batch pipeline, one analytical warehouse, and explicit ownership at every stage</text>
+  <rect x="70" y="135" width="1460" height="86" rx="18" fill="#dcecff" stroke="#8bb8e2" stroke-width="2"/>
+  <text x="105" y="171" class="label">AIRFLOW ORCHESTRATION</text>
+  <text x="105" y="201" class="subtitle">fetch_raw  →  ingest_raw  →  dbt_build  →  export_tableau</text>
+  <rect x="1240" y="155" width="255" height="47" rx="12" fill="#ffffff"/>
+  <text x="1367" y="176" text-anchor="middle" class="small">Airflow metadata</text>
+  <text x="1367" y="195" text-anchor="middle" class="small">users and run history</text>
+  <g filter="url(#shadow)">
+    <rect x="70" y="295" width="220" height="190" rx="22" fill="#ffffff" stroke="#bad3ea" stroke-width="2"/>
+    <circle cx="180" cy="347" r="27" fill="#e9f3fc"/>
+    <path d="M163 347h34M180 330v34" stroke="#2f69a1" stroke-width="4" stroke-linecap="round"/>
+    <text x="180" y="409" text-anchor="middle" class="box-title">Kaggle dataset</text>
+    <text x="180" y="438" text-anchor="middle" class="box-copy">7 source CSV files</text>
+    <text x="180" y="462" text-anchor="middle" class="box-copy">downloaded on demand</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="335" y="295" width="220" height="190" rx="22" fill="#ffffff" stroke="#bad3ea" stroke-width="2"/>
+    <rect x="414" y="321" width="62" height="51" rx="8" fill="#e9f3fc"/>
+    <path d="M429 339h32M429 352h25" stroke="#2f69a1" stroke-width="4" stroke-linecap="round"/>
+    <text x="445" y="409" text-anchor="middle" class="box-title">Python ingestion</text>
+    <text x="445" y="438" text-anchor="middle" class="box-copy">validate and replace</text>
+    <text x="445" y="462" text-anchor="middle" class="box-copy">raw tables atomically</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="600" y="295" width="220" height="190" rx="22" fill="#ffffff" stroke="#bad3ea" stroke-width="2"/>
+    <ellipse cx="710" cy="334" rx="35" ry="13" fill="#e9f3fc" stroke="#2f69a1" stroke-width="3"/>
+    <path d="M675 334v32c0 7 16 13 35 13s35-6 35-13v-32" fill="#e9f3fc" stroke="#2f69a1" stroke-width="3"/>
+    <text x="710" y="409" text-anchor="middle" class="box-title">DuckDB</text>
+    <text x="710" y="438" text-anchor="middle" class="box-copy">single local warehouse</text>
+    <text x="710" y="462" text-anchor="middle" class="box-copy">data/warehouse.duckdb</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="865" y="295" width="220" height="190" rx="22" fill="#ffffff" stroke="#bad3ea" stroke-width="2"/>
+    <circle cx="975" cy="347" r="29" fill="#ffeedb"/>
+    <path d="M956 347h38M975 328v38" stroke="#f28e2b" stroke-width="4" stroke-linecap="round"/>
+    <text x="975" y="409" text-anchor="middle" class="box-title">dbt</text>
+    <text x="975" y="438" text-anchor="middle" class="box-copy">31 models + 182 tests</text>
+    <text x="975" y="462" text-anchor="middle" class="box-copy">business logic and quality</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1130" y="295" width="220" height="190" rx="22" fill="#ffffff" stroke="#bad3ea" stroke-width="2"/>
+    <path d="M1211 324h58v51h-58z" fill="#e9f3fc" stroke="#2f69a1" stroke-width="3"/>
+    <path d="M1222 338h36M1222 349h36M1222 360h25" stroke="#2f69a1" stroke-width="3" stroke-linecap="round"/>
+    <text x="1240" y="409" text-anchor="middle" class="box-title">Tableau exports</text>
+    <text x="1240" y="438" text-anchor="middle" class="box-copy">8 governed CSV files</text>
+    <text x="1240" y="462" text-anchor="middle" class="box-copy">replaced atomically</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1395" y="295" width="135" height="190" rx="22" fill="#24559a"/>
+    <rect x="1428" y="326" width="68" height="47" rx="7" fill="#ffffff" opacity="0.95"/>
+    <path d="M1438 360l14-12 12 7 20-18" fill="none" stroke="#f28e2b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1462" y="409" text-anchor="middle" class="box-title" style="fill:#ffffff">Tableau</text>
+    <text x="1462" y="438" text-anchor="middle" class="box-copy" style="fill:#eaf3fb">decision-ready</text>
+    <text x="1462" y="462" text-anchor="middle" class="box-copy" style="fill:#eaf3fb">dashboard</text>
+  </g>
+  <path d="M290 390H325" class="flow"/>
+  <path d="M555 390H590" class="flow"/>
+  <path d="M820 390H855" class="flow"/>
+  <path d="M1085 390H1120" class="flow"/>
+  <path d="M1350 390H1385" class="flow"/>
+  <rect x="70" y="555" width="1460" height="130" rx="22" fill="#ffffff" stroke="#bad3ea" stroke-width="2"/>
+  <text x="105" y="595" class="label">DOCKER RUNTIME</text>
+  <text x="105" y="628" class="subtitle">A reproducible local environment for Airflow, Python, dbt, and DuckDB.</text>
+  <text x="105" y="658" class="small">Generated raw data, the warehouse file, and Tableau exports remain on mounted local volumes and are not committed to Git.</text>
+</svg>
