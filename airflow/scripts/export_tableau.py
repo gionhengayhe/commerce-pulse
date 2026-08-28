@@ -8,8 +8,7 @@ import duckdb
 
 
 REPO_DIR = Path(__file__).resolve().parents[2]
-DBT_PROJECT_DIR = REPO_DIR / "dbt_project"
-DEFAULT_DATABASE_PATH = DBT_PROJECT_DIR / "dev.duckdb"
+DEFAULT_DATABASE_PATH = REPO_DIR / "data" / "warehouse.duckdb"
 DEFAULT_OUTPUT_DIR = REPO_DIR / "data" / "export"
 DEFAULT_SCHEMA = "main_marts"
 

@@ -8,8 +8,7 @@ import duckdb
 
 
 REPO_DIR = Path(__file__).resolve().parents[2]
-DBT_PROJECT_DIR = REPO_DIR / "dbt_project"
-DEFAULT_DATABASE_PATH = DBT_PROJECT_DIR / "dev.duckdb"
+DEFAULT_DATABASE_PATH = REPO_DIR / "data" / "warehouse.duckdb"
 DEFAULT_RAW_DIR = REPO_DIR / "data" / "raw"
 TABLES = (
     "customers",
@@ -28,7 +27,7 @@ def parse_args() -> argparse.Namespace:
         "--database-path",
         type=Path,
         default=Path(os.getenv("COMMERCE_PULSE_DB_PATH", DEFAULT_DATABASE_PATH)),
-        help="DuckDB warehouse path (default: COMMERCE_PULSE_DB_PATH or dbt_project/dev.duckdb)",
+        help="DuckDB warehouse path (default: COMMERCE_PULSE_DB_PATH or data/warehouse.duckdb)",
     )
     parser.add_argument(
         "--raw-dir",

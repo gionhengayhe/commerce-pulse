@@ -4,7 +4,7 @@ FROM apache/airflow:${AIRFLOW_VERSION}
 
 ARG AIRFLOW_VERSION
 
-COPY docker/requirements.txt /tmp/commerce-pulse-requirements.txt
+COPY requirements.txt /tmp/commerce-pulse-requirements.txt
 
 RUN pip install --no-cache-dir \
     "apache-airflow==${AIRFLOW_VERSION}" \

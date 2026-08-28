@@ -1,5 +1,5 @@
-kagglehub
-polars
-dbt-core
-dbt-duckdb
-duckdb
+kagglehub==1.0.2
+polars==1.43.2
+dbt-core==1.12.0
+dbt-duckdb==1.11.0
+duckdb==1.5.5

@@ -20,18 +20,11 @@ x-airflow-common: &airflow-common
     AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_API_JWT_SECRET:-commerce-pulse-local-jwt-secret}
     AIRFLOW__API_AUTH__JWT_ISSUER: airflow
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
-    AIRFLOW__LOGGING__BASE_LOG_FOLDER: /opt/airflow/logs
-    COMMERCE_PULSE_REPO_ROOT: /opt/commerce-pulse
     COMMERCE_PULSE_KAGGLE_DATASET: ${COMMERCE_PULSE_KAGGLE_DATASET:-wafaaelhusseini/e-commerce-transactions-clickstream}
-    COMMERCE_PULSE_DB_PATH: /opt/commerce-pulse/dbt_project/dev.duckdb
-    COMMERCE_PULSE_RAW_DIR: /opt/commerce-pulse/data/raw
-    COMMERCE_PULSE_EXPORT_DIR: /opt/commerce-pulse/data/export
-    COMMERCE_PULSE_MART_SCHEMA: main_marts
     TZ: Asia/Ho_Chi_Minh
   volumes:
     - .:/opt/commerce-pulse
     - airflow-logs:/opt/airflow/logs
-    - kaggle-cache:/home/airflow/.cache/kagglehub
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on: &airflow-common-depends-on
     postgres:
@@ -117,15 +110,6 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
-  airflow-cli:
-    <<: *airflow-common
-    profiles: ["debug"]
-    command: ["bash", "-c", "airflow"]
-    environment:
-      <<: *airflow-common-environment
-      CONNECTION_CHECK_MAX_COUNT: "0"
-
 volumes:
   postgres-db:
   airflow-logs:
-  kaggle-cache:
